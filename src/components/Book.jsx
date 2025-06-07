@@ -1,7 +1,7 @@
-import { useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { pageAtom, pages } from "./UI"
-import { Bone, BoxGeometry, Float32BufferAttribute, MathUtils, MeshStandardMaterial, Skeleton, SkeletonHelper, SkinnedMesh, SRGBColorSpace, Uint16BufferAttribute, Vector3 } from "three";
-import { useHelper, useTexture } from '@react-three/drei';
+import { Bone, BoxGeometry, Float32BufferAttribute, LinearSRGBColorSpace, MathUtils, MeshBasicMaterial, MeshStandardMaterial, Skeleton, SkeletonHelper, SkinnedMesh, SRGBColorSpace, Uint16BufferAttribute, Vector3 } from "three";
+import { useCursor, useHelper, useTexture } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { degToRad } from 'three/src/math/MathUtils';
 import { roughness } from "three/examples/jsm/nodes/Nodes.js";
@@ -9,7 +9,8 @@ import { useAtom } from "jotai";
 import { easing } from "maath";
 
 //const lerpFactor = 0.05; //controls the speed of interpolation until we replace with easing
-const easingFactor = 0.5 //controls the speed of the easing.
+const easingFactor = 0.5; //controls the speed of the easing.
+const easingFactorFold = 0.3; //controls the speed of the easing.
 const insideCurveStrength = 0.18; //controls the strength of the curve
 const outsideCurveStrength = 0.05; //controls the strength of the curve
 const turningCurveStrength = 0.09; //controls the strength of the curve
@@ -62,16 +63,16 @@ pageGeometry.setAttribute(
 
 
 const pageMaterials = [
-    new MeshStandardMaterial({
+    new MeshBasicMaterial({
         color: "fff",
     }),
-    new MeshStandardMaterial({
-        color: "#111",
+    new MeshBasicMaterial({
+        color: "#C49E97",
     }),
-    new MeshStandardMaterial({
+    new MeshBasicMaterial({
         color: "fff",
     }),
-    new MeshStandardMaterial({
+    new MeshBasicMaterial({
         color: "fff",
     }),
 ]
@@ -91,8 +92,10 @@ const Page = ({number, front, back, page, opened, bookClosed, ...props}) => {
         `/images/${back}.png`,
     ]);
     picture.colorSpace = picture2.colorSpace = SRGBColorSpace;
-
+  
     const group = useRef();
+    const turnedAt = useRef(0); //save the date when we change twhether its open or not on specfic page.
+    const lastOpened = useRef(opened); //to check if the last frame was open or not and that's how we know about the changed date above.
 
     const skinnedMeshRef = useRef();
 
@@ -115,15 +118,16 @@ const Page = ({number, front, back, page, opened, bookClosed, ...props}) => {
 
         //skinned mesh
         const materials = [...pageMaterials,
-            new MeshStandardMaterial({
+            new MeshBasicMaterial({
+                color: "#fff",
                 map: picture, //if number is 0 we'll create a visual effect with the lights. closer to 1 makes more matte effect.
-                ...(number === 0 ? {
-                    roughnessMap: pictureRoughness,
-                } : {
-                    roughness: 0.1,
+                roughness: 0.1,
                 }),
-                }),
-                new MeshStandardMaterial
+            new MeshBasicMaterial ({ //this is so another image appears on the back side when flipped
+                color: "#fff",
+                map: picture2,
+                roughness: 0.1,
+                })
         ];
         const mesh = new SkinnedMesh(pageGeometry, materials);
         mesh.castShadow = true;
@@ -142,6 +146,16 @@ const Page = ({number, front, back, page, opened, bookClosed, ...props}) => {
             return;
         }
 
+        if (lastOpened.current !== opened) { //if the value between open and last is differnt it means we just chnaged it so we can then...
+            turnedAt.current = +new Date(); //save it it as a new Date. the "+" gets the timestamp value.
+            lastOpened.current = opened; //and then we store the last value date here.
+        }
+        //then to have this effect last 400 miliseconds...
+        let turningTime = Math.min(400, new Date() - turnedAt.current) / 400; //by dividing it by 400 we get a value between 0 and 1 and it will mean we are either starting the transition or not.
+        //the following math equation is for it to open halfway between 0 and 1, and when it then falls to 1 on the curve, it will turn to 0 again.
+        turningTime = Math.sin(turningTime * Math.PI);
+
+
         let targetRotation = opened ? -Math.PI / 2 : Math.PI / 2;
         if (!bookClosed) { //this if statement removes the space inbetween when closed
         targetRotation += degToRad(number * 0.8); //this fixes the one page never changing issue for some reason, but it also gives space to pages inbetween.
@@ -156,14 +170,19 @@ const Page = ({number, front, back, page, opened, bookClosed, ...props}) => {
             //applying the right curve is very math heavy. use graphtoy.com for help. but we need to make a variable for the intensity we want and that's what this is using math.
             const insideCurveIntensity = i < 8 ? Math.sin(i * 0.2 + 0.25) : 0;
             const outsideCurveIntensity = i >= 8 ? Math.cos(i * 0.3 + 0.09) : 0;
+            const turningIntensity = Math.sin(i * Math.PI * (1 / bones.length)) * turningTime; //the inbetween turning of pages. bends inside before going back to normal position.
             let rotationAngle =
                 insideCurveStrength * insideCurveIntensity * targetRotation -
-                outsideCurveStrength * outsideCurveIntensity * targetRotation;
+                outsideCurveStrength * outsideCurveIntensity * targetRotation +
+                turningCurveStrength * turningIntensity * targetRotation;
+                //now to bend on the x-axis too while the page is turning.
+                let foldRotationAngle = degToRad(Math.sign(targetRotation) * 2); //it will be equal to 1 or -1. because Math.sign returns -1 if targetRotation is below 0 and 1 if it's over. so basically, if the book is open or not.
             if (bookClosed) {
                 if (i === 0) {
                     rotationAngle = targetRotation;
                 }else {
                     rotationAngle = 0;
+                    foldRotationAngle = 0; //book is closed.
                 }
             }
 
@@ -174,15 +193,44 @@ const Page = ({number, front, back, page, opened, bookClosed, ...props}) => {
                 easingFactor, 
                 delta
             );
+
+            //when the bone is over 8 it creates this intensity.
+            const foldIntensity = i > 8 ? Math.sin(i * Math.PI * (1 / bones.length) - 0.5) * turningTime : 0;
+            easing.dampAngle(
+                target.rotation,
+                "x",
+                foldRotationAngle * foldIntensity,
+                easingFactorFold,
+                delta
+            );
         };
     });
 
+    const [_, setPage] = useAtom(pageAtom);
+    const [highlighted, setHighlighted] = useState(false);
+    useCursor(highlighted); //turns cursor to pointer when highlighted value is true.
+
     return (
-        <group {...props} ref={group}>
+        <group {...props} ref={group}
+        //adding events so we can turn pages on hover and click
+        onPointerEnter={(e) => {
+            e.stopPropagation();//this is needed so it only does it one the one we hover and not impact all the pages.
+            setHighlighted(true);
+        }}
+        onPointerLeave={(e) => {
+            e.stopPropagation();
+            setHighlighted(false);
+        }}
+        onClick={(e) => {
+            e.stopPropagation();
+            setPage(opened ? number : number +1);
+            setHighlighted(false);
+        }}
+        >
             <primitive 
                 object={manualSkinnedMesh} 
                 ref={skinnedMeshRef}
-                //position-z={-number * PAGE_DEPTH + page * PAGE_DEPTH} //this made everything funky. probably best not to use.
+                position-z={-number * PAGE_DEPTH + page * PAGE_DEPTH} //stops it from all the pages fighting for visablity
                />
 
             {/* //we're using skinnedMesh instead of mesh because it has a skeleton that can be used to animate vertices of the geometry. so we delete the below that was just to get an object on screen and replace it with what's above.
@@ -197,16 +245,47 @@ const Page = ({number, front, back, page, opened, bookClosed, ...props}) => {
 
 export const Book = ({...props}) => {
     const [page] = useAtom(pageAtom) //connects to the UI component so we more to page when clicked
+    //add delayedPage logic so it stops turning all pages at once and gives it more of a flip feel when moving between multiple pages.
+    const [delayedPage, setDelayedPage] = useState(page);
+
+    useEffect(() => {
+        let timeout;
+        const goToPage = () => {
+            setDelayedPage((delayedPage) => {
+                if (page === delayedPage) {
+                    return delayedPage; //if equal just return because we didnt't turn page.
+                }else {
+                    timeout = setTimeout(() => {
+                        goToPage();
+                        },
+                    Math.abs(page - delayedPage) > 2 ? 50 : 150 //if we have more that 2 pages, do it quickly of 50 milisec, otherwise slower at 150 milisecs.
+                    ); 
+                    //these below is what does the page by page flip instead of all at once while deciding if speed is 50 or 150. basically the 150 makes it slow down when it reaches the page you want.
+                    if (page > delayedPage) {
+                        return delayedPage + 1;
+                    }
+                    if (page < delayedPage) {
+                        return delayedPage - 1;
+                    }
+                }
+            })
+        }
+        goToPage();
+        return () => {
+            clearTimeout(timeout);
+        };
+    }, [page]);
+
     return(
         <group {...props} rotation-y={-Math.PI / 2}>
         {[...pages].map((pageData, index) => (
                     <Page
                         //position-x={index * 0.15} //removed to not have all the pages popping out
                         key={index}
-                        page= {page} //need to know what page we're on
+                        page= {delayedPage} //need to know what page we're on. *was originally "page" but changed to "delayedPage" after setting that up.
                         number={index}
-                        opened={page > index}
-                        bookClosed={page === 0 || page === pages.length}
+                        opened={delayedPage > index} //*originally "page", change for same reason as above.
+                        bookClosed={delayedPage === 0 || delayedPage === pages.length} //*same as above with page.
                         {...pageData}
                     />
         ))}

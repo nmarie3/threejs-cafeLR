@@ -16,5 +16,5 @@ body {
 }
 
 .outline-text {
-  -webkit-text-stroke: 1px white;
+  -webkit-text-stroke: 6px white;
 }
