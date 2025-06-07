@@ -1,7 +1,18 @@
 import { useMemo, useRef } from "react"
-import { pages } from "./UI"
-import { Bone, BoxGeometry, Float32BufferAttribute, MeshStandardMaterial, Skeleton, SkeletonHelper, SkinnedMesh, Uint16BufferAttribute, Vector3 } from "three";
-import { useHelper } from '@react-three/drei';
+import { pageAtom, pages } from "./UI"
+import { Bone, BoxGeometry, Float32BufferAttribute, MathUtils, MeshStandardMaterial, Skeleton, SkeletonHelper, SkinnedMesh, SRGBColorSpace, Uint16BufferAttribute, Vector3 } from "three";
+import { useHelper, useTexture } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
+import { degToRad } from 'three/src/math/MathUtils';
+import { roughness } from "three/examples/jsm/nodes/Nodes.js";
+import { useAtom } from "jotai";
+import { easing } from "maath";
+
+//const lerpFactor = 0.05; //controls the speed of interpolation until we replace with easing
+const easingFactor = 0.5 //controls the speed of the easing.
+const insideCurveStrength = 0.18; //controls the strength of the curve
+const outsideCurveStrength = 0.05; //controls the strength of the curve
+const turningCurveStrength = 0.09; //controls the strength of the curve
 
 const PAGE_WIDTH = 1.28;
 const PAGE_HEIGHT = 1.71; //4:3 aspect ratio
@@ -48,30 +59,39 @@ pageGeometry.setAttribute(
 );
 
 //page materials. 6 materials because the book's geometry has 6 faces. one material per face
+
+
 const pageMaterials = [
     new MeshStandardMaterial({
-        color: "#fff",
+        color: "fff",
     }),
     new MeshStandardMaterial({
         color: "#111",
     }),
     new MeshStandardMaterial({
-        color: "#fff",
+        color: "fff",
     }),
     new MeshStandardMaterial({
-        color: "#fff",
-    }),
-    new MeshStandardMaterial({
-        color: "pink",
-    }),
-    new MeshStandardMaterial({
-        color: "blue",
+        color: "fff",
     }),
 ]
 
+//preload all pages
+pages.forEach((page) => {
+    useTexture.preload(`/images/${page.front}.png`);
+    useTexture.preload(`/images/${page.back}.png`);
+});
 
 
-const Page = ({number, front, back, ...props}) => {
+//can make this page a seperate component
+const Page = ({number, front, back, page, opened, bookClosed, ...props}) => {
+    //create texture of front and back photos
+    const [picture, picture2, pictureRoughness] = useTexture([
+        `/images/${front}.png`,
+        `/images/${back}.png`,
+    ]);
+    picture.colorSpace = picture2.colorSpace = SRGBColorSpace;
+
     const group = useRef();
 
     const skinnedMeshRef = useRef();
@@ -94,7 +114,17 @@ const Page = ({number, front, back, ...props}) => {
         const skeleton = new Skeleton(bones);
 
         //skinned mesh
-        const materials = pageMaterials;
+        const materials = [...pageMaterials,
+            new MeshStandardMaterial({
+                map: picture, //if number is 0 we'll create a visual effect with the lights. closer to 1 makes more matte effect.
+                ...(number === 0 ? {
+                    roughnessMap: pictureRoughness,
+                } : {
+                    roughness: 0.1,
+                }),
+                }),
+                new MeshStandardMaterial
+        ];
         const mesh = new SkinnedMesh(pageGeometry, materials);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
@@ -107,21 +137,53 @@ const Page = ({number, front, back, ...props}) => {
     //this shows us the bones, not neccessary unless you want visual conformation
     //useHelper(skinnedMeshRef, SkeletonHelper, "red");
 
-    useFrame(() => {
+    useFrame((_, delta) => {
         if (!skinnedMeshRef.current) {
             return;
         }
 
+        let targetRotation = opened ? -Math.PI / 2 : Math.PI / 2;
+        if (!bookClosed) { //this if statement removes the space inbetween when closed
+        targetRotation += degToRad(number * 0.8); //this fixes the one page never changing issue for some reason, but it also gives space to pages inbetween.
+        }
+
         const bones = skinnedMeshRef.current.skeleton.bones;
+        //bones[0].rotation.y = MathUtils.lerp(bones[0].rotation.y, targetRotation, lerpFactor); //this is before messing with bones and will open normally
+        //looping through each bone applying a rotation to make the ideal curve.
+        for (let i = 0; i < bones.length; i++) {
+            const target = i === 0 ? group.current : bones[i]; //our target won't be a bone but the group below in the return (container of our page) because we are changing the z position of our page and rotate the parent before apply rotation z then all the bones.
+        
+            //applying the right curve is very math heavy. use graphtoy.com for help. but we need to make a variable for the intensity we want and that's what this is using math.
+            const insideCurveIntensity = i < 8 ? Math.sin(i * 0.2 + 0.25) : 0;
+            const outsideCurveIntensity = i >= 8 ? Math.cos(i * 0.3 + 0.09) : 0;
+            let rotationAngle =
+                insideCurveStrength * insideCurveIntensity * targetRotation -
+                outsideCurveStrength * outsideCurveIntensity * targetRotation;
+            if (bookClosed) {
+                if (i === 0) {
+                    rotationAngle = targetRotation;
+                }else {
+                    rotationAngle = 0;
+                }
+            }
 
-        bones[2].rotation.y = degToRad(40);
-        bones[4].rotation.y = degToRad(-40);
-
+            easing.dampAngle(
+                target.rotation, 
+                "y", //the key
+                rotationAngle,  
+                easingFactor, 
+                delta
+            );
+        };
     });
 
     return (
         <group {...props} ref={group}>
-            <primitive object={manualSkinnedMesh} ref={skinnedMeshRef}/>
+            <primitive 
+                object={manualSkinnedMesh} 
+                ref={skinnedMeshRef}
+                //position-z={-number * PAGE_DEPTH + page * PAGE_DEPTH} //this made everything funky. probably best not to use.
+               />
 
             {/* //we're using skinnedMesh instead of mesh because it has a skeleton that can be used to animate vertices of the geometry. so we delete the below that was just to get an object on screen and replace it with what's above.
             <mesh scale={1}>
@@ -134,20 +196,20 @@ const Page = ({number, front, back, ...props}) => {
 
 
 export const Book = ({...props}) => {
+    const [page] = useAtom(pageAtom) //connects to the UI component so we more to page when clicked
     return(
-        <group {...props}>
-        {
-            [...pages].map((pageData, index) => (
-                (index === 0 ? (
+        <group {...props} rotation-y={-Math.PI / 2}>
+        {[...pages].map((pageData, index) => (
                     <Page
-                        position-x={index * 0.15}
+                        //position-x={index * 0.15} //removed to not have all the pages popping out
                         key={index}
+                        page= {page} //need to know what page we're on
                         number={index}
+                        opened={page > index}
+                        bookClosed={page === 0 || page === pages.length}
                         {...pageData}
                     />
-                ) : null)
-            ))
-        }
-    </group>
-);
+        ))}
+        </group>
+    );
 };
