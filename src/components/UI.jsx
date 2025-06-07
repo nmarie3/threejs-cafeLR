@@ -1,15 +1,16 @@
 import { atom, useAtom } from "jotai";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import { GiSpeaker, GiSpeakerOff } from "react-icons/gi";
 
 const pictures = [
   "coverback",
+  "firstpage",
   "page1",
   "page2",
   "page3",
   "page4",
+  "blank",
   "page5",
-  "blank",
-  "blank",
   "blank",
   "coverback",
 ];
@@ -35,26 +36,62 @@ pages.push({
 
 export const UI = () => {
   const [page, setPage] = useAtom(pageAtom);
+  const bgAudio = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(true);
 
   //audio flipping
   useEffect(() => {
-    const audio = new Audio("/audios/page-flip.mp3");
+    const audio = new Audio("/audio/page-flip.mp3"); //new audio recreates teh sound each time component re-renders (aka, page flip.button click). do not want to do that for bg music.
+    audio.volume = 0.15;
     audio.play();
   }, [page]);
+
+  //bg audio
+  useEffect(() => { //if statement here only creates audio once
+    if(!bgAudio.current) {
+      bgAudio.current = new Audio("/audio/hana_no_tou.mp3");
+      bgAudio.current.loop = true;
+      bgAudio.current.volume = 0.05;
+      bgAudio.current.muted = false;
+    }
+
+    bgAudio.current.play()
+    .then(() => {
+      setIsPlaying(!bgAudio.current.muted); //this updates the icon to play state on autoplay.
+    })
+    .catch((err) => { //chrome and safari usually block audio unless user interacts with site (click, scroll, etc.), so this error throws a promise if play fails.
+      console.warn("Autoplay blocked", err);
+      setIsPlaying(false); //fallback if fails
+    });
+
+    return () => { //this return is for cleanup. needed for things that will be play/pause, has intervals, persists, re-runs or unmounts effect, avoid component from playing when user navigates away etc. in short: it auto plays, then if you click somthing it plays again on top of the first one and so on if it's not cleaned up.
+      bgAudio.current.pause();
+    };
+  }, ); //don't add a [] at the end here, it breaks the audio.
+
+  const toggleMute = () => {
+    if (!bgAudio.current) return;
+
+    const newMutedState = !bgAudio.current.muted;
+    bgAudio.current.muted = newMutedState;
+    setIsPlaying(!newMutedState);
+  };
 
   return (
     <>
       <main className="pointer-events-none select-none z-10 fixed  inset-0  flex justify-between flex-col">
-        <div className="grid grid-cols-[30%_70%]">
-          <a
-            className="pointer-events-auto mt-10 ml-10"
-            href="https://lycoris-recoil.com/cafe_lyco_reco/"
-          >
-            <img className="w-30 h-20 hover:scale-105" src="/images/logo.png" />
-          </a>
-          <div className="bg-white/40 rounded-xl p-3 mt-5 mr-5">
+        <div className="">
+          <div className="inline-block ml-10">
+            <a
+              className="pointer-events-auto mt-10 ml-10"
+              href="https://lycoris-recoil.com/cafe_lyco_reco/"
+            >
+              <img className="h-20 hover:scale-105" src="/images/logo.png" />
+            </a>
+          </div>
+          <div className="w-80 bg-white/40 rounded-xl p-3 ml-10 mt-5">
             <h2 className="text-black text-xs">
-              Hi! This is an interactive project inspired by episode 3 of Lycoris Recoil Short Movies! For the meantime, you can flip through the pages of Chisato's original draft menu. I have future plans to add a comment section on the blank pages for fans to leave messages, but until I figure out how to implement that, feel free to flip through!<br />
+              Hi! This is an interactive fan project inspired by episode 3 of Lycoris Recoil Short Movies! Flip through the pages of Chisato's original draft menu!<br /><br />Ideally I'd like to add a comment section on the blank pages for fans to leave messages, but until I figure out how to implement that, feel free to flip through!<br /><br />
               *Hold the SHIFT key and click+hold the mouse to move the position of the book.<br />
               *Click+hold the mouse to rotate book.<br />
               *Click the book or buttons to flip through pages.<br />
@@ -62,7 +99,17 @@ export const UI = () => {
               (TIP: click+hold outside the book to avoid page auto-flip on release)
             </h2>
           </div>
+          {/*audio buttons*/}
+          <div className="flex p-10 text-white cursor-pointer">
+            <button onClick={toggleMute} className="border-2 border-white rounded-full p-1 pointer-events-auto text-5xl z-50">
+              {isPlaying ? <GiSpeaker /> : <GiSpeakerOff />}
+            </button>
+            <h2 className="pl-4 text-xl"><span className="text-sm">Play/Mute<br /></span>Hana no Tou (Soseki D&B remix)</h2>
+            </div>
+            <button>click me</button>
         </div>
+
+        {/*page buttons*/}
         <div className="w-full overflow-auto pointer-events-auto flex justify-center">
           <div className="overflow-auto flex items-center gap-4 max-w-full p-10">
             {[...pages].map((_, index) => (
