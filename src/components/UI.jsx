@@ -106,7 +106,6 @@ export const UI = () => {
             </button>
             <h2 className="pl-4 text-xl"><span className="text-sm">Play/Mute<br /></span>Hana no Tou (Soseki D&B remix)</h2>
             </div>
-            <button>click me</button>
         </div>
 
         {/*page buttons*/}

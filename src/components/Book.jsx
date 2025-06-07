@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { pageAtom, pages } from "./UI"
-import { Bone, BoxGeometry, Float32BufferAttribute, LinearSRGBColorSpace, MathUtils, MeshBasicMaterial, MeshStandardMaterial, Skeleton, SkeletonHelper, SkinnedMesh, SRGBColorSpace, Uint16BufferAttribute, Vector3 } from "three";
+import { Bone, BoxGeometry, Float32BufferAttribute, MeshBasicMaterial, Skeleton, SkeletonHelper, SkinnedMesh, SRGBColorSpace, Uint16BufferAttribute, Vector3 } from "three";
 import { useCursor, useHelper, useTexture } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { degToRad } from 'three/src/math/MathUtils';
-import { roughness } from "three/examples/jsm/nodes/Nodes.js";
 import { useAtom } from "jotai";
 import { easing } from "maath";
 
@@ -87,7 +86,7 @@ pages.forEach((page) => {
 //can make this page a seperate component
 const Page = ({number, front, back, page, opened, bookClosed, ...props}) => {
     //create texture of front and back photos
-    const [picture, picture2, pictureRoughness] = useTexture([
+    const [picture, picture2] = useTexture([
         `/images/${front}.png`,
         `/images/${back}.png`,
     ]);
