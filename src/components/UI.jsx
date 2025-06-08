@@ -36,22 +36,28 @@ pages.push({
 
 export const UI = () => {
   const [page, setPage] = useAtom(pageAtom);
+  const flipAudio = useRef(null);
   const bgAudio = useRef(null);
   const [isPlaying, setIsPlaying] = useState(true);
 
   //audio flipping
   useEffect(() => {
-    const audio = new Audio("/audio/page-flip.mp3"); //new audio recreates teh sound each time component re-renders (aka, page flip.button click). do not want to do that for bg music.
-    audio.volume = 0.15;
-    audio.play();
-  }, [page]);
+    if(!flipAudio.current) {
+      flipAudio.current = new Audio("/audio/page-flip.mp3"); //new audio recreates the sound each time component re-renders (aka, page flip.button click). do not want to do that for bg music.
+      flipAudio.current.volume = 0.15;
+    }
+
+    flipAudio.current.currentTime = 0; //rewinds to start over
+    flipAudio.current.play();
+  }, [page]); //putting page in here because it happens each time a page is rendered, unlike bgAudio where it keeps going.
+
 
   //bg audio
   useEffect(() => { //if statement here only creates audio once
     if(!bgAudio.current) {
       bgAudio.current = new Audio("/audio/hana_no_tou.mp3");
       bgAudio.current.loop = true;
-      bgAudio.current.volume = 0.05;
+      bgAudio.current.volume = 0.1;
       bgAudio.current.muted = false;
     }
 
