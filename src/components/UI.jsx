@@ -111,7 +111,7 @@ export const UI = () => {
               <div className="mx-2 bg-white/75 rounded-xl p-3">
                 <h2 className="text-black text-xs">
                   Hi! This is an interactive fan project inspired by episode 3 of Lycoris Recoil Short Movies! Flip through the pages of Chisato's original draft menu!<br /><br />Ideally I'd like to also add a comment section on the blank pages for fans to leave messages, but until I figure out how to implement that, feel free to flip through!<br /><br />
-                  The BG audio clips when page flipping for some mobile devices, at the moment. Sorry;;
+                  The BG audio clips when page flipping for some mobile devices at the moment. Sorry;; Will try fixing it. (it works on PC)
                 </h2>
               </div>
         </div>
