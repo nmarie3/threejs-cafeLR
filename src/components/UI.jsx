@@ -110,7 +110,8 @@ export const UI = () => {
 
               <div className="m-2 bg-white/75 rounded-xl p-3 mt-2">
                 <h2 className="text-black text-xs">
-                  Hi! This is an interactive fan project inspired by episode 3 of Lycoris Recoil Short Movies! Flip through the pages of Chisato's original draft menu!<br /><br />Ideally I'd like to also add a comment section on the blank pages for fans to leave messages, but until I figure out how to implement that, feel free to flip through!
+                  Hi! This is an interactive fan project inspired by episode 3 of Lycoris Recoil Short Movies! Flip through the pages of Chisato's original draft menu!<br /><br />Ideally I'd like to also add a comment section on the blank pages for fans to leave messages, but until I figure out how to implement that, feel free to flip through!<br /><br />
+                  The BG audio clips when page flipping for some mobile devices, at the moment. Sorry;;
                 </h2>
               </div>
         </div>
@@ -136,6 +137,7 @@ export const UI = () => {
           <div className="w-80 bg-white/75 rounded-xl p-3 ml-10 mt-5">
             <h2 className="text-black text-xs">
               Hi! This is an interactive fan project inspired by episode 3 of Lycoris Recoil Short Movies! Flip through the pages of Chisato's original draft menu!<br /><br />Ideally I'd like to also add a comment section on the blank pages for fans to leave messages, but until I figure out how to implement that, feel free to flip through!<br /><br />
+              PC Users:<br />
               *Hold the SHIFT key and click+hold the mouse to move the position of the book.<br />
               *Click+hold the mouse to rotate book.<br />
               *Click the book or buttons to flip through pages.<br />
