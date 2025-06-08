@@ -44,12 +44,12 @@ export const UI = () => {
   useEffect(() => {
     if(!flipAudio.current) {
       flipAudio.current = new Audio("/audio/page-flip.mp3"); //new audio recreates the sound each time component re-renders (aka, page flip.button click). do not want to do that for bg music.
-      flipAudio.current.volume = 0.15;
+      flipAudio.current.volume = 0.23;
     }
 
     flipAudio.current.currentTime = 0; //rewinds to start over
     flipAudio.current.play();
-  }, [page]); //putting page in here because it happens each time a page is rendered, unlike bgAudio where it keeps going.
+  },); //putting [page] has the component rerender which is fine for PC, but ends up cutting off the music for mobile, so I removed it.
 
 
   //bg audio
