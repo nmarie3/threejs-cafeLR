@@ -1,6 +1,7 @@
 import { atom, useAtom } from "jotai";
 import { useEffect, useRef, useState } from "react";
 import { GiSpeaker, GiSpeakerOff } from "react-icons/gi";
+import { Howl } from 'howler';
 
 const pictures = [
   "coverback",
@@ -42,14 +43,15 @@ export const UI = () => {
 
   //audio flipping
   useEffect(() => {
-    if(!flipAudio.current) {
-      flipAudio.current = new Audio("/audio/page-flip.mp3"); //new audio recreates the sound each time component re-renders (aka, page flip.button click). do not want to do that for bg music.
-      flipAudio.current.volume = 0.23;
+    if (!flipAudio.current) {
+      flipAudio.current = new Howl({
+        src: ['/audio/page-flip.mp3'],
+        volume: 0.25,
+      });
     }
 
-    flipAudio.current.currentTime = 0; //rewinds to start over
     flipAudio.current.play();
-  },); //putting [page] has the component rerender which is fine for PC, but ends up cutting off the music for mobile, so I removed it.
+  }, [page]);
 
 
   //bg audio
