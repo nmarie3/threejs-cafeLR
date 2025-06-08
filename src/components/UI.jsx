@@ -80,7 +80,40 @@ export const UI = () => {
   return (
     <>
       <main className="pointer-events-none select-none z-10 fixed  inset-0  flex justify-between flex-col">
-        <div className="">
+        {/*mobile only*/}
+        <div className="block md:hidden">
+
+            <div className="flex">
+                <a
+                  className="pointer-events-auto p-3"
+                  href="https://lycoris-recoil.com/cafe_lyco_reco/"
+                >
+                  <img className="h-10 md:h-20 hover:scale-105" src="/images/logo.png" />
+                </a>
+                {/*audio buttons*/}
+                <div className="flex p-3 items-center text-white cursor-pointer">
+                  <button onClick={toggleMute} className="border-2 border-white rounded-full p-1  pointer-events-auto text-3xl bg-black/30">
+                    {isPlaying ? <GiSpeaker /> : <GiSpeakerOff />}
+                  </button>
+                  <h2 className="pl-4 text-xs"><span className="text-xs">Play/Mute<br /></span>Hana no Tou (Soseki D&B remix)</h2>
+                </div>
+            </div>
+
+
+              <div className="m-2 bg-white/75 rounded-xl p-3 mt-2">
+                <h2 className="text-black text-xs">
+                  Hi! This is an interactive fan project inspired by episode 3 of Lycoris Recoil Short Movies! Flip through the pages of Chisato's original draft menu!<br /><br />Ideally I'd like to also add a comment section on the blank pages for fans to leave messages, but until I figure out how to implement that, feel free to flip through!<br /><br />
+                  *Hold the SHIFT key and click+hold the mouse to move the position of the book.<br />
+                  *Click+hold the mouse to rotate book.<br />
+                  *Click the book or buttons to flip through pages.<br />
+                  *Use the mouse scroll to zoom in and out.<br />
+                  (TIP: click+hold outside the book to avoid page auto-flip on release)
+                </h2>
+              </div>
+        </div>
+
+        {/*PC only*/}
+        <div className="hidden md:block">
           <div className="inline-block ml-10">
             <a
               className="pointer-events-auto mt-10 ml-10"
@@ -89,9 +122,9 @@ export const UI = () => {
               <img className="h-20 hover:scale-105" src="/images/logo.png" />
             </a>
           </div>
-          <div className="w-80 bg-white/40 rounded-xl p-3 ml-10 mt-5">
+          <div className="w-80 bg-white/75 rounded-xl p-3 ml-10 mt-5">
             <h2 className="text-black text-xs">
-              Hi! This is an interactive fan project inspired by episode 3 of Lycoris Recoil Short Movies! Flip through the pages of Chisato's original draft menu!<br /><br />Ideally I'd like to add a comment section on the blank pages for fans to leave messages, but until I figure out how to implement that, feel free to flip through!<br /><br />
+              Hi! This is an interactive fan project inspired by episode 3 of Lycoris Recoil Short Movies! Flip through the pages of Chisato's original draft menu!<br /><br />Ideally I'd like to also add a comment section on the blank pages for fans to leave messages, but until I figure out how to implement that, feel free to flip through!<br /><br />
               *Hold the SHIFT key and click+hold the mouse to move the position of the book.<br />
               *Click+hold the mouse to rotate book.<br />
               *Click the book or buttons to flip through pages.<br />
@@ -101,20 +134,21 @@ export const UI = () => {
           </div>
           {/*audio buttons*/}
           <div className="flex p-10 text-white cursor-pointer">
-            <button onClick={toggleMute} className="border-2 border-white rounded-full p-1 pointer-events-auto text-5xl z-50">
+            <button onClick={toggleMute} className="border-2 border-white rounded-full p-1 pointer-events-auto text-5xl hover:bg-black/30">
               {isPlaying ? <GiSpeaker /> : <GiSpeakerOff />}
             </button>
             <h2 className="pl-4 text-xl"><span className="text-sm">Play/Mute<br /></span>Hana no Tou (Soseki D&B remix)</h2>
             </div>
         </div>
 
+        {/*////////mobile and PC mix////////////*/}
         {/*page buttons*/}
         <div className="w-full overflow-auto pointer-events-auto flex justify-center">
-          <div className="overflow-auto flex items-center gap-4 max-w-full p-10">
+          <div className="flex justify-center items-center flex-wrap gap-1.5 md:gap-4 md:max-w-full p-2 md:p-10">
             {[...pages].map((_, index) => (
               <button
                 key={index}
-                className={`border-transparent hover:border-white transition-all duration-300  px-4 py-3 rounded-full  text-lg uppercase shrink-0 border ${
+                className={`border-transparent hover:border-white transition-all duration-300 px-3 md:px-4 py-3 rounded-full text-sm  md:text-lg uppercase shrink-0 border ${
                   index === page
                     ? "bg-white/90 text-black"
                     : "bg-black/30 text-white"
@@ -125,14 +159,14 @@ export const UI = () => {
               </button>
             ))}
             <button
-              className={`border-transparent hover:border-white transition-all duration-300  px-4 py-3 rounded-full  text-lg uppercase shrink-0 border ${
+              className={`border-transparent hover:border-white transition-all duration-300  px-4 py-3 rounded-full  text-sm md:text-lg uppercase shrink-0 border ${
                 page === pages.length
                   ? "bg-white/90 text-black"
                   : "bg-black/30 text-white"
               }`}
               onClick={() => setPage(pages.length)}
             >
-              Back Cover
+              Back
             </button>
           </div>
         </div>

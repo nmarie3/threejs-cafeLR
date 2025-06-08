@@ -10,7 +10,7 @@ function App() {
       <UI />
       <Loader />
       <Canvas shadows camera={{ position: [-0.5, 1, 4], fov: 45 }}>
-        <group position-y={0}>
+        <group position-y={-0.2} position-x={-0.6}>
           <Suspense fallback={null}>
             <Experience />
           </Suspense>
