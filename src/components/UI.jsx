@@ -96,7 +96,7 @@ export const UI = () => {
                   className="pointer-events-auto p-3"
                   href="https://lycoris-recoil.com/cafe_lyco_reco/"
                 >
-                  <img className="h-10 md:h-20 hover:scale-105" src="/images/logo.png" />
+                  <img className="h-10 hover:scale-105" src="/images/logo.png" />
                 </a>
                 {/*audio buttons*/}
                 <div className="flex p-3 items-center text-white cursor-pointer">
@@ -108,7 +108,7 @@ export const UI = () => {
             </div>
 
 
-              <div className="m-2 bg-white/75 rounded-xl p-3 mt-2">
+              <div className="mx-2 bg-white/75 rounded-xl p-3">
                 <h2 className="text-black text-xs">
                   Hi! This is an interactive fan project inspired by episode 3 of Lycoris Recoil Short Movies! Flip through the pages of Chisato's original draft menu!<br /><br />Ideally I'd like to also add a comment section on the blank pages for fans to leave messages, but until I figure out how to implement that, feel free to flip through!<br /><br />
                   The BG audio clips when page flipping for some mobile devices, at the moment. Sorry;;
@@ -118,33 +118,34 @@ export const UI = () => {
 
         {/*PC only*/}
         <div className="hidden md:block">
-          <div className="flex">
-                <a
-                  className="pointer-events-auto mt-10 ml-10"
-                  href="https://lycoris-recoil.com/cafe_lyco_reco/"
-                >
-                  <img className="h-10 md:h-20 hover:scale-105" src="/images/logo.png" />
-                </a>
-                {/*audio buttons*/}
-                <div className="flex mt-12 p-3 items-center text-white cursor-pointer">
-                  <button onClick={toggleMute} className="border-2 border-white rounded-full p-1 pointer-events-auto text-5xl hover:bg-black/30">
-                    {isPlaying ? <GiSpeaker /> : <GiSpeakerOff />}
-                  </button>
-                  <h2 className="pl-4 text-xl"><span className="text-sm">Play/Mute<br /></span>Hana no Tou (Soseki D&B remix)</h2>
-                </div>
+            <div className="inline-block  ml-10">
+                  <a
+                    className="pointer-events-auto mt-10 ml-10"
+                    href="https://lycoris-recoil.com/cafe_lyco_reco/"
+                  >
+                    <img className="h-20 hover:scale-105" src="/images/logo.png" />
+                  </a>
             </div>
 
-          <div className="w-80 bg-white/75 rounded-xl p-3 ml-10 mt-5">
-            <h2 className="text-black text-xs">
-              Hi! This is an interactive fan project inspired by episode 3 of Lycoris Recoil Short Movies! Flip through the pages of Chisato's original draft menu!<br /><br />Ideally I'd like to also add a comment section on the blank pages for fans to leave messages, but until I figure out how to implement that, feel free to flip through!<br /><br />
-              PC Users:<br />
-              *Hold the SHIFT key and click+hold the mouse to move the position of the book.<br />
-              *Click+hold the mouse to rotate book.<br />
-              *Click the book or buttons to flip through pages.<br />
-              *Use the mouse scroll to zoom in and out.<br />
-              (TIP: click+hold outside the book to avoid page auto-flip on release)
-            </h2>
-          </div>
+            <div className="w-80 bg-white/75 rounded-xl p-3 ml-10 mt-5">
+              <h2 className="text-black text-xs">
+                Hi! This is an interactive fan project inspired by episode 3 of Lycoris Recoil Short Movies! Flip through the pages of Chisato's original draft menu!<br /><br />Ideally I'd like to also add a comment section on the blank pages for fans to leave messages, but until I figure out how to implement that, feel free to flip through!<br /><br />
+                PC Users:<br />
+                *Hold the SHIFT key and click+hold the mouse to move the position of the book.<br />
+                *Click+hold the mouse to rotate book.<br />
+                *Click the book or buttons to flip through pages.<br />
+                *Use the mouse scroll to zoom in and out.<br />
+                (TIP: click+hold outside the book to avoid page auto-flip on release)
+              </h2>
+            </div>
+
+            {/*audio buttons*/}
+                  <div className="flex ml-8 mt-2 p-3 items-center text-white cursor-pointer">
+                    <button onClick={toggleMute} className="border-2 border-white rounded-full p-1 pointer-events-auto text-4xl hover:bg-black/30">
+                      {isPlaying ? <GiSpeaker /> : <GiSpeakerOff />}
+                    </button>
+                    <h2 className="pl-4 text-lg"><span className="text-sm">Play/Mute<br /></span>Hana no Tou (Soseki D&B remix)</h2>
+                  </div>
         </div>
 
         {/*////////mobile and PC mix////////////*/}
